@@ -1,0 +1,7 @@
+# src/test/resources/application-test.yaml
+spring:
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
