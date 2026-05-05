@@ -43,7 +43,37 @@ git show --no-patch --format="hash:%H%nshort:%h%nsubject:%s%nauthor:%an%ndate:%a
 - `author`：提交者
 - `date`：提交日期
 
-### 第三步：取得變更檔案清單並分組
+### 第三步：檢查目標檔案是否已存在（若已存在則直接結束）
+
+依據第二步取得的 `subject`（commit message）與 `short-hash`，組出目標檔案路徑：
+
+```
+docs/commit/<commit-message>_<short-hash>.md
+```
+
+> 若 `commit-message` 中含有檔案系統不允許的字元（`/`、`:`、空白、引號等），請先做必要的清理或以 `-` 取代後再比對；亦可只用 `short-hash` 進行檔名匹配，避免 message 變動造成誤判。
+
+執行檢查（任一方式皆可）：
+
+```bash
+# 方式 A：精確比對完整路徑
+test -f "docs/commit/<commit-message>_<short-hash>.md" && echo EXISTS || echo MISSING
+
+# 方式 B：以 short-hash 為關鍵字模糊比對（保險作法）
+ls docs/commit/ 2>/dev/null | grep -F "<short-hash>.md"
+```
+
+依結果分流：
+
+- **若檔案已存在** → **立即結束本次任務**，不執行第四步及以後的任何動作（不取得 diff、不分析、不覆寫既有檔案）。回報使用者：
+
+  > 已存在分析文件 `docs/commit/<commit-message>_<short-hash>.md`，本次不重新生成。如需重新分析，請先手動刪除或重新命名既有檔案後再執行。
+
+- **若檔案不存在** → 繼續第四步。
+
+> 注意：此步驟是**短路檢查（short-circuit）**，務必在執行第四步「逐模組分析」（成本高的 diff 讀取與推論）之前完成判斷。
+
+### 第四步：取得變更檔案清單並分組
 
 執行以下指令取得變更檔案清單：
 
@@ -58,7 +88,7 @@ git show --name-only --format="" <hash>
 
 只保留在此 commit 中有變更的模組。
 
-### 第四步：逐模組分析
+### 第五步：逐模組分析
 
 對每個有變更的模組，使用 Bash 工具執行以下指令取得該模組的 diff：
 
@@ -87,7 +117,7 @@ Diff內容需**全部**讀取，不可以head參數略過。
    列出新增的參數名稱與值
    變更的部分，則僅列出會影響業務邏輯相關的名稱與值
 
-### 第五步：生成文件
+### 第六步：生成文件
 
 確保輸出目錄存在：
 
@@ -130,7 +160,7 @@ mkdir -p docs/commit
 
 每個有變更的模組重複以上結構。模組之間以 `---` 分隔。
 
-### 第六步：回報結果
+### 第七步：回報結果
 
 告知使用者文件已生成，並顯示檔案路徑：
 
