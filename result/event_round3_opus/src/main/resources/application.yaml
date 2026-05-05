@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: cctest
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cctest
+    username: cctest
+    password: cctest
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: true
+    metrics:
+      export:
+        enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

@@ -1,0 +1,14 @@
+# .aorskeep
+# 把這個檔案放到每個模組根目錄（例如 gitrepo/ams/biz-management/.aorskeep）
+# 列出套用 patch 時要保留的路徑（語法同 rsync --exclude pattern）。
+#
+# 注意：以下這幾個路徑無論如何都會被保留，不需要重複寫：
+#   .git/   docs/   .aorskeep
+#
+# 範例：
+README.md
+CHANGELOG.local.md
+.gitignore
+.editorconfig
+scripts-local/
+.vscode/
