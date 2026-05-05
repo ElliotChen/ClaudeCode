@@ -1,6 +1,9 @@
 # 錯誤案例文件模板
 
-每個錯誤情境產出一個 `.md` 檔案，遵循以下結構：
+每個錯誤情境產出一個 `.md` 檔案，遵循以下結構。模板以 HTML 註解劃分兩種區塊：
+
+- **AUTO-GENERATED 區塊**：由 skill 維護，update 模式下會被整段覆寫
+- **MANUAL 區塊**：由使用者手動維護，update 模式下**永不覆寫**
 
 ```markdown
 ---
@@ -8,9 +11,22 @@ title: <錯誤名稱（繁體中文）>
 component: <發生元件類別名稱>
 alert_level: CRITICAL | WARNING | NONE
 source_file: <原始碼相對路徑>
+source_hash: <SHA1 前 6 字元，由 skill 自動計算與更新>
+created: <YYYY-MM-DD，初次建立日期，後續永不變動>
+updated: <YYYY-MM-DD，最後一次自動更新日期>
+deprecated: <YYYY-MM-DD，僅在案例已從 codebase 移除時填入；否則省略此欄位>
 ---
 
+<!--
+若 frontmatter 的 deprecated 有值，於此處（# 標題之上）插入下列 callout；
+否則不插入此區塊。
+-->
+> [!warning] Deprecated
+> 本案例對應的錯誤處理邏輯已於 <date> 從 codebase 移除。保留作為歷史參考。
+
 # <錯誤名稱>
+
+<!-- AUTO-GENERATED:START -->
 
 ## 觸發條件
 
@@ -73,6 +89,17 @@ source_file: <原始碼相對路徑>
 - 上游：[<錯誤名稱>](<相對路徑>)
 - 下游：[<錯誤名稱>](<相對路徑>)
 - 相關：[<錯誤名稱>](<相對路徑>)
+
+<!-- AUTO-GENERATED:END -->
+
+<!-- MANUAL:START -->
+
+## 排查經驗 / 備註
+
+> 此區塊由使用者手動維護，update 模式下不會被覆寫。
+> 可記錄：實際發生過的 incident、排查步驟、修復紀錄、root cause 分析、相關 ticket 連結等。
+
+<!-- MANUAL:END -->
 ```
 
 ## 命名規則
@@ -83,3 +110,43 @@ source_file: <原始碼相對路徑>
   - `feign-exception.md`（而非 `eai-to-ams-service-error.md`）
   - `null-token.md`（而非 `handler-illegal-argument.md`）
   - `db-connection-exception.md`（而非 `notification-service-critical.md`）
+
+## source_hash 計算規則
+
+對下列三個欄位以 `|` 串接後做 SHA1，取前 6 字元：
+
+```
+<source_file 相對路徑>|<catch 的例外類型>|<log 訊息模板（不含變數值）>
+```
+
+範例：
+
+```
+src/main/java/.../FeignClient.java|FeignException|"Feign call failed: {}"
+↓ SHA1 ↓
+a3f9c2
+```
+
+當其中任一輸入變動時，hash 會改變，diff 步驟即可偵測到該案例需要更新。
+
+> **注意**：log 訊息模板需移除實際變數值（保留 `{}` 或 `%s` 等佔位符），避免每次重跑因執行期參數不同而誤判為變更。
+
+## 自動區與手動區邊界
+
+- **AUTO-GENERATED 區塊**內含章節：觸發條件、錯誤處理方式、Log 訊息、Alert、影響範圍、相關元件
+- **MANUAL 區塊**內含章節：排查經驗 / 備註，以及任何使用者主動加入的章節
+
+如需新增使用者自訂章節，請放在 `<!-- MANUAL:START -->` 與 `<!-- MANUAL:END -->` 之間，否則 update 時會被視為過期內容並被覆寫。
+
+## Update 模式下的檔案處理流程
+
+skill 在更新既有檔案時：
+
+1. 讀取整份檔案
+2. 解析 frontmatter，保留 `created` 原值
+3. 抽出 `<!-- MANUAL:START -->` 至 `<!-- MANUAL:END -->` 之間的全部內容（含章節標題）
+4. 重新生成 AUTO-GENERATED 區塊
+5. 重新組合：新 frontmatter（更新 `updated`、`source_hash`）+ Deprecated callout（若有）+ `# 標題` + 新 AUTO-GENERATED 區塊 + 原 MANUAL 區塊
+6. 寫回檔案
+
+若解析時找不到 MANUAL 邊界註解（檔案損壞或被手動編輯破壞結構），skill 應停止寫入並回報使用者，由使用者確認後才強制覆寫。

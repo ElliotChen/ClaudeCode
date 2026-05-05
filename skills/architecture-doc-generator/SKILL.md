@@ -45,7 +45,14 @@ docs/architecture/
 
 ### 3. 產生文件內容
 
-針對每份文件，使用 `references/document-templates.md` 中的範本作為指引。關鍵原則：
+針對每份文件，使用 `references/` 目錄中的範本作為指引：
+
+- `document-templates-foundation.md` - 01-04 文件範本（系統總覽到系統架構）
+- `document-templates-tech-data.md` - 05-06 文件範本（技術堆疊與資料架構）
+- `document-templates-implementation-testing.md` - 07-08, 10 文件範本（實作、橫切關注點、測試）
+- `document-templates-deployment.md` - 09 文件範本（部署架構）
+
+關鍵原則：
 
 **具體明確**：包含實際的技術版本、使用的具體模式、來自專案的實際範例。
 
@@ -110,7 +117,7 @@ docs/architecture/
 ### 系統總覽與設計
 - [系統總覽](./01-系統總覽.md) - 系統背景、範疇與目標
 - [架構目標](./02-架構目標.md) - 品質屬性、限制條件與架構決策
-- [DDD 設計](./03-DDD設計.md) - Bounded Context、Aggregate 與領域模型
+- [DDD設計](./03-DDD設計.md) - Bounded Context、Aggregate 與領域模型
 
 ### 技術架構
 - [系統架構](./04-系統架構.md) - 架構視圖與通訊模式
@@ -118,7 +125,7 @@ docs/architecture/
 - [資料架構](./06-資料架構.md) - 資料模型、Repository 與持久化
 
 ### 實作細節
-- [Spring Boot 實作](./07-SpringBoot實作.md) - Spring Boot 特定實作指南
+- [SpringBoot實作](./07-SpringBoot實作.md) - Spring Boot 特定實作指南
 - [橫切關注點](./08-橫切關注點.md) - 安全性、監控、錯誤處理
 
 ### 部署與測試
@@ -160,7 +167,7 @@ docs/architecture/
 - **專案版本**：v1.0.0
 ```
 
-**範本在**：`references/README範本.md`
+**範本在**：`references/readme-template.md`
 
 使用此範本客製化專案的 README.md，包含：
 - 實際的專案名稱
@@ -170,7 +177,14 @@ docs/architecture/
 
 ## 文件範本
 
-每種文件類型的詳細範本在 `references/document-templates.md` 中。產生特定文件時載入此檔案。
+文件範本分為四個檔案，涵蓋所有 10 份架構文件：
+
+- `references/document-templates-foundation.md` - 系統總覽、架構目標、DDD 設計、系統架構
+- `references/document-templates-tech-data.md` - 技術堆疊、資料架構
+- `references/document-templates-implementation-testing.md` - Spring Boot 實作、橫切關注點、測試策略
+- `references/document-templates-deployment.md` - 部署架構
+
+產生特定文件時載入對應的範本檔案。
 
 ## 圖表指引
 
@@ -205,7 +219,179 @@ docs/architecture/
 - 包含 YAML frontmatter（標題與日期）
 - 程式碼區塊使用適當的語言語法高亮
 
+## 更新現有文件
+
+當專案程式碼或架構變更後，需要更新已產生的文件時，遵循以下工作流程：
+
+### 更新前檢查
+
+1. **檢測現有文件**：
+   - 檢查 `docs/architecture/` 目錄是否存在
+   - 列出已存在的文件清單
+   - 詢問使用者更新意圖
+
+2. **確認更新範圍**：
+   - 詢問哪些部分發生變更（新增 Context、技術升級、架構調整等）
+   - 確認需要更新的文件範圍
+   - 提醒使用者先用 Git commit 保存現有版本
+
+### 更新策略
+
+**策略 1：完整重新生成**（適用於大規模重構）
+```
+使用情境：系統架構大幅調整、技術堆疊全面升級
+作法：重新執行完整工作流程，覆蓋所有文件
+風險：會覆蓋使用者的自訂修改
+建議：使用前確保已 Git commit，更新後使用 git diff 檢查差異
+```
+
+**策略 2：增量更新**（建議方式）
+```
+使用情境：新增功能、局部調整、新增整合
+作法：僅更新受影響的文件章節
+保留：不受影響的章節與使用者自訂內容
+```
+
+**策略 3：新增補充文件**
+```
+使用情境：新增 Bounded Context、新增 ADR
+作法：在現有文件中新增章節，或建立補充文件
+保留：完整保留現有內容
+```
+
+### 常見更新情境
+
+#### 情境 1：新增 Bounded Context
+
+**影響文件**：
+- `03-DDD設計.md` - 新增 Context 描述與 Context Map
+- `04-系統架構.md` - 更新容器圖與元件圖
+- `06-資料架構.md` - 新增資料庫綱要（如需要）
+- `README.md` - 更新 Context 列表
+
+**更新方式**：
+在 03-DDD設計.md 中找到「Bounded Context」章節，在現有 Context 之後新增新的 Context 描述。更新 Context Map 圖表，加入新的關係線。
+
+#### 情境 2：技術堆疊升級
+
+**影響文件**：
+- `05-技術堆疊.md` - 更新版本資訊與設定
+- `07-SpringBoot實作.md` - 更新程式碼範例（如 API 變更）
+- `09-部署架構.md` - 更新 Dockerfile 基礎映像
+- `README.md` - 更新技術堆疊摘要表
+
+**更新方式**：
+使用 str_replace 精確替換版本資訊。檢查是否有 breaking changes 需要更新程式碼範例。
+
+#### 情境 3：新增架構決策 (ADR)
+
+**影響文件**：
+- `02-架構目標.md` - 在 ADR 章節新增
+
+**更新方式**：
+在「架構決策記錄」章節找到最後一個 ADR，在其後新增新的 ADR（編號遞增）。保持格式一致：背景、決策、後果、替代方案、狀態。
+
+#### 情境 4：部署環境調整
+
+**影響文件**：
+- `09-部署架構.md` - 更新 Kubernetes manifest、HPA 設定等
+
+**更新方式**：
+找到特定的 YAML 區塊（如 Deployment、HPA），使用 str_replace 替換舊設定。確保更新後的設定與實際環境一致。
+
+#### 情境 5：新增外部服務整合
+
+**影響文件**：
+- `04-系統架構.md` - 更新情境圖，加入外部系統
+- `05-技術堆疊.md` - 新增第三方整合章節
+- `07-SpringBoot實作.md` - 新增 Anticorruption Layer 範例
+
+**更新方式**：
+在相關章節找到適當位置插入新內容。更新 Mermaid 圖表加入新的外部系統節點。提供整合的程式碼範例。
+
+### 更新工作流程
+
+1. **準備階段**：
+   - 掃描現有文件
+   - 詢問變更類型與範圍
+   - 建議受影響的文件清單
+   - 提醒先 Git commit
+
+2. **執行更新**：
+   - 使用 view 工具讀取現有文件
+   - 使用 str_replace 精確替換需要更新的部分
+   - 保留不受影響的章節
+   - 更新相關的 Mermaid 圖表
+
+3. **驗證更新**：
+   - 檢查文件間的交叉引用是否一致
+   - 確認圖表與文字描述相符
+   - 驗證程式碼範例的正確性
+   - 更新 README.md 中的「最後更新」日期
+
+4. **版本記錄**：
+   - 在文件 frontmatter 更新日期
+   - 在 README.md 記錄此次更新內容
+   - 建議使用者建立 Git commit
+
+### 保留使用者自訂內容
+
+**使用註解標記**（建議使用者採用）：
+```markdown
+<!-- 自訂內容開始 -->
+這裡是團隊自行新增的特定說明...
+<!-- 自訂內容結束 -->
+```
+
+更新時，Claude 會：
+- 識別並保留 `<!-- 自訂內容開始 -->` 和 `<!-- 自訂內容結束 -->` 之間的內容
+- 僅更新標記之外的自動生成內容
+- 提醒使用者檢查自訂內容是否仍然適用
+
 ## 使用範例
+
+### 範例 1：初次產生文件
+
+**使用者**：「請為我們使用 Spring Boot 和 DDD 建構的訂單管理微服務產生架構文件。」
+
+**處理流程**：
+1. 詢問 Bounded Context（訂單、庫存、出貨？）
+2. 確認技術堆疊（PostgreSQL、Kafka、Redis？）
+3. 在 `docs/architecture/` 建立全部 10 份文件
+4. 產生展示關係的 Context Map
+5. 記錄 Spring Boot 整合模式
+6. 包含來自其領域的具體範例
+7. 產生 README.md 提供導航
+
+### 範例 2：更新現有文件
+
+**使用者**：「我們升級到 Spring Boot 3.3 並新增了 Redis Sentinel 支援，請更新文件。」
+
+**處理流程**：
+1. 掃描發現已存在文件
+2. 識別需要更新的文件：`05-技術堆疊.md`、`06-資料架構.md`
+3. 更新 Spring Boot 版本號（3.2.x → 3.3.x）
+4. 在快取章節新增 Redis Sentinel 設定
+5. 更新相關的 YAML 設定範例
+6. 更新 README.md 的技術堆疊表格
+7. 更新「最後更新」日期
+
+### 範例 3：新增 Bounded Context
+
+**使用者**：「我新增了一個 Notification Context，請更新架構文件。」
+
+**處理流程**：
+1. 掃描 `docs/architecture/` 目錄，發現已存在文件
+2. 詢問：「請描述 Notification Context 的職責與它和其他 Context 的關係」
+3. 使用 view 讀取 `03-DDD設計.md`
+4. 在 Bounded Context 章節新增 Notification Context 描述
+5. 更新 Context Map Mermaid 圖表，加入 Notification 節點與關係
+6. 使用 view 讀取 `04-系統架構.md`
+7. 更新容器圖，加入 notification-service
+8. 更新 `README.md` 的 Context 列表
+9. 提示：「已更新 3 份文件，請使用 git diff 檢查變更」
+
+## 使用範例（續）
 
 **使用者**：「請為我們使用 Spring Boot 和 DDD 建構的訂單管理微服務產生架構文件。」
 
@@ -219,6 +405,10 @@ docs/architecture/
 
 ## 參考資料
 
-- `references/document-templates.md` - 每種文件類型的詳細範本
+- `references/document-templates-foundation.md` - 01-04 文件範本
+- `references/document-templates-tech-data.md` - 05-06 文件範本
+- `references/document-templates-implementation-testing.md` - 07-08, 10 文件範本
+- `references/document-templates-deployment.md` - 09 文件範本
 - `references/diagram-examples.md` - Mermaid 圖表範本與範例
 - `references/ddd-patterns.md` - Spring Boot 中常見 DDD 模式實作
+- `references/readme-template.md` - README.md 範本
